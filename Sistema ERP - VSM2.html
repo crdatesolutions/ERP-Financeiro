@@ -1,0 +1,2139 @@
+<!DOCTYPE html>
+<html lang="pt-BR">
+
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>VSM2 — ERP Financeiro Jurídico</title>
+  <link rel="preconnect" href="https://fonts.googleapis.com">
+  <link
+    href="https://fonts.googleapis.com/css2?family=Plus+Jakarta+Sans:wght@400;500;600;700;800&family=JetBrains+Mono:wght@400;500&display=swap"
+    rel="stylesheet">
+  <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
+  <style>
+    /* ═══════════════════════════════════════════
+       DESIGN TOKENS — VSM2 Dark Premium
+    ═══════════════════════════════════════════ */
+    :root {
+      /* BACKGROUND */
+      --bg-base: #F8FAFC;
+      --bg-surface: #FFFFFF;
+      --bg-elevated: #F1F5F9;
+      --bg-card: #FFFFFF;
+      --bg-hover: #EEF2F7;
+      --bg-overlay: rgba(0, 0, 0, 0.03);
+
+      /* GRADIENTES (mantém igual) */
+      --grad-primary: linear-gradient(135deg, #4F6BFF 0%, #7C3AED 60%, #C026D3 100%);
+      --grad-green: linear-gradient(135deg, #10B981 0%, #059669 100%);
+      --grad-red: linear-gradient(135deg, #EF4444 0%, #DC2626 100%);
+      --grad-amber: linear-gradient(135deg, #F59E0B 0%, #D97706 100%);
+      --grad-blue: linear-gradient(135deg, #3B82F6 0%, #1D4ED8 100%);
+      --grad-subtle: linear-gradient(135deg, rgba(79, 107, 255, 0.08) 0%, rgba(192, 38, 211, 0.04) 100%);
+
+      /* TEXTOS */
+      --text-primary: #0F172A;
+      --text-secondary: #475569;
+      --text-muted: #94A3B8;
+      --text-accent: #4F6BFF;
+      --text-success: #10B981;
+      --text-danger: #EF4444;
+      --text-warning: #F59E0B;
+
+      /* BORDAS */
+      --border-subtle: rgba(0, 0, 0, 0.06);
+      --border-medium: rgba(0, 0, 0, 0.10);
+      --border-accent: rgba(79, 107, 255, 0.30);
+      --border-success: rgba(16, 185, 129, 0.30);
+      --border-danger: rgba(239, 68, 68, 0.30);
+
+      /* GLASS */
+      --glass-bg: rgba(255, 255, 255, 0.70);
+      --glass-border: rgba(0, 0, 0, 0.08);
+      --glass-blur: blur(20px);
+      --glass-shadow: 0 8px 30px rgba(0, 0, 0, 0.08);
+
+      /* SHADOWS */
+      --shadow-sm: 0 2px 8px rgba(0, 0, 0, 0.06);
+      --shadow-md: 0 8px 20px rgba(0, 0, 0, 0.08);
+      --shadow-lg: 0 20px 40px rgba(0, 0, 0, 0.10);
+      --glow-blue: 0 0 12px rgba(79, 107, 255, 0.20);
+
+      /* RESTO IGUAL */
+      --radius-xs: 6px;
+      --radius-sm: 8px;
+      --radius-md: 12px;
+      --radius-lg: 16px;
+      --radius-xl: 20px;
+      --radius-2xl: 28px;
+
+      --sidebar-w: 240px;
+      --header-h: 60px;
+
+      --font: 'Plus Jakarta Sans', sans-serif;
+      --font-mono: 'JetBrains Mono', monospace;
+
+      --transition: 0.18s ease;
+    }
+
+    /* ═══════════════════════════════════════════
+       RESET & BASE
+    ═══════════════════════════════════════════ */
+    *,
+    *::before,
+    *::after {
+      box-sizing: border-box;
+      margin: 0;
+      padding: 0;
+    }
+
+    html {
+      scroll-behavior: smooth;
+    }
+
+    body {
+      font-family: var(--font);
+      background: var(--bg-base);
+      color: var(--text-primary);
+      font-size: 14px;
+      line-height: 1.6;
+      min-height: 100vh;
+      overflow-x: hidden;
+      -webkit-font-smoothing: antialiased;
+    }
+
+    button {
+      font-family: var(--font);
+      cursor: pointer;
+      border: none;
+      outline: none;
+    }
+
+    input,
+    select,
+    textarea {
+      font-family: var(--font);
+      outline: none;
+    }
+
+    a {
+      text-decoration: none;
+      color: inherit;
+    }
+
+    ul {
+      list-style: none;
+    }
+
+    /* ═══════════════════════════════════════════
+       LAYOUT PRINCIPAL
+    ═══════════════════════════════════════════ */
+    #app {
+      display: flex;
+      min-height: 100vh;
+    }
+
+    /* ───── SIDEBAR ───── */
+    .sidebar {
+      width: var(--sidebar-w);
+      background: var(--bg-surface);
+      border-right: 1px solid var(--border-subtle);
+      display: flex;
+      flex-direction: column;
+      position: fixed;
+      top: 0;
+      left: 0;
+      height: 100vh;
+      z-index: 100;
+      transition: transform var(--transition);
+    }
+
+    .sidebar-logo {
+      padding: 20px 20px 16px;
+      border-bottom: 1px solid var(--border-subtle);
+      display: flex;
+      align-items: center;
+      gap: 10px;
+    }
+
+    .logo-icon {
+      width: 34px;
+      height: 34px;
+      background: var(--grad-primary);
+      border-radius: var(--radius-sm);
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      font-size: 16px;
+      font-weight: 800;
+      color: white;
+      box-shadow: var(--glow-blue);
+      flex-shrink: 0;
+    }
+
+    .logo-text {
+      font-size: 15px;
+      font-weight: 700;
+      color: var(--text-primary);
+    }
+
+    .logo-sub {
+      font-size: 10px;
+      color: var(--text-muted);
+      font-weight: 500;
+      letter-spacing: 0.05em;
+      text-transform: uppercase;
+    }
+
+    .sidebar-nav {
+      flex: 1;
+      padding: 12px 10px;
+      overflow-y: auto;
+    }
+
+    .nav-section-label {
+      font-size: 10px;
+      font-weight: 700;
+      letter-spacing: 0.08em;
+      text-transform: uppercase;
+      color: var(--text-muted);
+      padding: 12px 10px 6px;
+    }
+
+    .nav-item {
+      display: flex;
+      align-items: center;
+      gap: 10px;
+      padding: 9px 12px;
+      border-radius: var(--radius-sm);
+      color: var(--text-secondary);
+      font-size: 13px;
+      font-weight: 500;
+      cursor: pointer;
+      transition: all var(--transition);
+      margin-bottom: 2px;
+    }
+
+    .nav-item:hover {
+      background: var(--bg-hover);
+      color: var(--text-primary);
+    }
+
+    .nav-item.active {
+      background: var(--grad-subtle);
+      color: var(--text-accent);
+      border: 1px solid var(--border-accent);
+    }
+
+    .nav-item .nav-icon {
+      font-size: 16px;
+      flex-shrink: 0;
+    }
+
+    .sidebar-footer {
+      padding: 12px 16px;
+      border-top: 1px solid var(--border-subtle);
+      font-size: 11px;
+      color: var(--text-muted);
+    }
+
+    /* ───── MAIN CONTENT ───── */
+    .main-content {
+      margin-left: var(--sidebar-w);
+      flex: 1;
+      display: flex;
+      flex-direction: column;
+      min-height: 100vh;
+    }
+
+    /* ───── HEADER ───── */
+    .header {
+      height: var(--header-h);
+      background: var(--bg-surface);
+      border-bottom: 1px solid var(--border-subtle);
+      display: flex;
+      align-items: center;
+      justify-content: space-between;
+      padding: 0 28px;
+      position: sticky;
+      top: 0;
+      z-index: 50;
+      backdrop-filter: blur(12px);
+    }
+
+    .header-title {
+      font-size: 16px;
+      font-weight: 700;
+      color: var(--text-primary);
+    }
+
+    .header-subtitle {
+      font-size: 12px;
+      color: var(--text-muted);
+      margin-top: 1px;
+    }
+
+    .header-actions {
+      display: flex;
+      align-items: center;
+      gap: 10px;
+    }
+
+    /* ───── PAGE ───── */
+    .page {
+      padding: 28px;
+      animation: fadeIn 0.3s ease;
+      display: none;
+    }
+
+    .page.active {
+      display: block;
+    }
+
+    @keyframes fadeIn {
+      from {
+        opacity: 0;
+        transform: translateY(8px);
+      }
+
+      to {
+        opacity: 1;
+        transform: translateY(0);
+      }
+    }
+
+    /* ═══════════════════════════════════════════
+       COMPONENTES REUTILIZÁVEIS
+    ═══════════════════════════════════════════ */
+
+    /* Botões */
+    .btn {
+      display: inline-flex;
+      align-items: center;
+      gap: 6px;
+      padding: 8px 16px;
+      border-radius: var(--radius-sm);
+      font-size: 13px;
+      font-weight: 600;
+      transition: all var(--transition);
+      white-space: nowrap;
+    }
+
+    .btn-primary {
+      background: var(--grad-primary);
+      color: white;
+      box-shadow: var(--shadow-sm);
+    }
+
+    .btn-primary:hover {
+      transform: translateY(-1px);
+      box-shadow: var(--glow-blue);
+    }
+
+    .btn-secondary {
+      background: var(--bg-elevated);
+      color: var(--text-secondary);
+      border: 1px solid var(--border-medium);
+    }
+
+    .btn-secondary:hover {
+      background: var(--bg-hover);
+      color: var(--text-primary);
+    }
+
+    .btn-danger {
+      background: rgba(239, 68, 68, 0.12);
+      color: var(--text-danger);
+      border: 1px solid var(--border-danger);
+    }
+
+    .btn-danger:hover {
+      background: rgba(239, 68, 68, 0.20);
+    }
+
+    .btn-success {
+      background: rgba(16, 185, 129, 0.12);
+      color: var(--text-success);
+      border: 1px solid var(--border-success);
+    }
+
+    .btn-success:hover {
+      background: rgba(16, 185, 129, 0.20);
+    }
+
+    .btn-sm {
+      padding: 5px 10px;
+      font-size: 12px;
+    }
+
+    .btn-icon {
+      padding: 7px;
+      border-radius: var(--radius-sm);
+    }
+
+    /* Cards */
+    .card {
+      background: var(--bg-card);
+      border: 1px solid var(--border-subtle);
+      border-radius: var(--radius-lg);
+      padding: 20px;
+    }
+
+    .card-header {
+      display: flex;
+      align-items: center;
+      justify-content: space-between;
+      margin-bottom: 16px;
+    }
+
+    .card-title {
+      font-size: 14px;
+      font-weight: 700;
+      color: var(--text-primary);
+    }
+
+    .card-subtitle {
+      font-size: 12px;
+      color: var(--text-muted);
+      margin-top: 2px;
+    }
+
+    /* Stat cards */
+    .stats-grid {
+      display: grid;
+      grid-template-columns: repeat(auto-fit, minmax(180px, 1fr));
+      gap: 16px;
+      margin-bottom: 24px;
+    }
+
+    .stat-card {
+      background: var(--bg-card);
+      border: 1px solid var(--border-subtle);
+      border-radius: var(--radius-lg);
+      padding: 18px 20px;
+      position: relative;
+      overflow: hidden;
+    }
+
+    .stat-card::before {
+      content: '';
+      position: absolute;
+      top: 0;
+      left: 0;
+      right: 0;
+      height: 2px;
+      border-radius: var(--radius-lg) var(--radius-lg) 0 0;
+    }
+
+    .stat-card.green::before {
+      background: var(--grad-green);
+    }
+
+    .stat-card.blue::before {
+      background: var(--grad-blue);
+    }
+
+    .stat-card.purple::before {
+      background: var(--grad-primary);
+    }
+
+    .stat-card.amber::before {
+      background: var(--grad-amber);
+    }
+
+    .stat-label {
+      font-size: 11px;
+      color: var(--text-muted);
+      font-weight: 600;
+      text-transform: uppercase;
+      letter-spacing: 0.05em;
+      margin-bottom: 8px;
+    }
+
+    .stat-value {
+      font-size: 24px;
+      font-weight: 800;
+      color: var(--text-primary);
+      line-height: 1;
+    }
+
+    .stat-sub {
+      font-size: 11px;
+      color: var(--text-muted);
+      margin-top: 4px;
+    }
+
+    /* Tabela */
+    .table-wrap {
+      overflow-x: auto;
+      border-radius: var(--radius-md);
+      border: 1px solid var(--border-subtle);
+    }
+
+    table {
+      width: 100%;
+      border-collapse: collapse;
+    }
+
+    thead tr {
+      background: var(--bg-elevated);
+    }
+
+    th {
+      padding: 11px 14px;
+      text-align: left;
+      font-size: 11px;
+      font-weight: 700;
+      color: var(--text-muted);
+      text-transform: uppercase;
+      letter-spacing: 0.06em;
+      white-space: nowrap;
+      border-bottom: 1px solid var(--border-subtle);
+    }
+
+    tbody tr {
+      border-bottom: 1px solid var(--border-subtle);
+      transition: background var(--transition);
+    }
+
+    tbody tr:last-child {
+      border-bottom: none;
+    }
+
+    tbody tr:hover {
+      background: var(--bg-hover);
+    }
+
+    td {
+      padding: 12px 14px;
+      font-size: 13px;
+      color: var(--text-secondary);
+      vertical-align: middle;
+    }
+
+    td.bold {
+      color: var(--text-primary);
+      font-weight: 600;
+    }
+
+    /* Formulários */
+    .form-grid {
+      display: grid;
+      gap: 16px;
+    }
+
+    .form-grid-2 {
+      grid-template-columns: 1fr 1fr;
+    }
+
+    .form-grid-3 {
+      grid-template-columns: 1fr 1fr 1fr;
+    }
+
+    .form-grid-4 {
+      grid-template-columns: 1fr 1fr 1fr 1fr;
+    }
+
+    .form-group {
+      display: flex;
+      flex-direction: column;
+      gap: 6px;
+    }
+
+    .form-group.full {
+      grid-column: 1 / -1;
+    }
+
+    label {
+      font-size: 12px;
+      font-weight: 600;
+      color: var(--text-secondary);
+      text-transform: uppercase;
+      letter-spacing: 0.04em;
+    }
+
+    input,
+    select,
+    textarea {
+      background: var(--bg-elevated);
+      border: 1px solid var(--border-medium);
+      border-radius: var(--radius-sm);
+      color: var(--text-primary);
+      padding: 9px 12px;
+      font-size: 13px;
+      width: 100%;
+      transition: border-color var(--transition), box-shadow var(--transition);
+    }
+
+    input:focus,
+    select:focus,
+    textarea:focus {
+      border-color: rgba(79, 107, 255, 0.60);
+      box-shadow: 0 0 0 3px rgba(79, 107, 255, 0.10);
+    }
+
+    input::placeholder {
+      color: var(--text-muted);
+    }
+
+    select option {
+      background: var(--bg-elevated);
+      color: var(--text-primary);
+    }
+
+    textarea {
+      resize: vertical;
+      min-height: 80px;
+    }
+
+    .input-prefix-wrap {
+      position: relative;
+    }
+
+    .input-prefix-wrap .prefix {
+      position: absolute;
+      left: 12px;
+      top: 50%;
+      transform: translateY(-50%);
+      color: var(--text-muted);
+      font-size: 13px;
+      pointer-events: none;
+    }
+
+    .input-prefix-wrap input {
+      padding-left: 28px;
+    }
+
+    /* Badge / Status */
+    .badge {
+      display: inline-flex;
+      align-items: center;
+      gap: 4px;
+      padding: 3px 9px;
+      border-radius: 99px;
+      font-size: 11px;
+      font-weight: 700;
+      text-transform: uppercase;
+      letter-spacing: 0.04em;
+      white-space: nowrap;
+    }
+
+    .badge-green {
+      background: rgba(16, 185, 129, 0.12);
+      color: #34D399;
+      border: 1px solid rgba(52, 211, 153, 0.25);
+    }
+
+    .badge-red {
+      background: rgba(239, 68, 68, 0.12);
+      color: #F87171;
+      border: 1px solid rgba(248, 113, 113, 0.25);
+    }
+
+    .badge-amber {
+      background: rgba(251, 191, 36, 0.12);
+      color: #FBBF24;
+      border: 1px solid rgba(251, 191, 36, 0.25);
+    }
+
+    .badge-blue {
+      background: rgba(59, 130, 246, 0.12);
+      color: #60A5FA;
+      border: 1px solid rgba(96, 165, 250, 0.25);
+    }
+
+    .badge-purple {
+      background: rgba(124, 58, 237, 0.12);
+      color: #A78BFA;
+      border: 1px solid rgba(167, 139, 250, 0.25);
+    }
+
+    .badge-gray {
+      background: rgba(255, 255, 255, 0.05);
+      color: var(--text-muted);
+      border: 1px solid var(--border-subtle);
+    }
+
+    /* Modal */
+    .modal-backdrop {
+      display: none;
+      position: fixed;
+      inset: 0;
+      background: rgba(0, 0, 0, 0.70);
+      backdrop-filter: blur(4px);
+      z-index: 200;
+      align-items: center;
+      justify-content: center;
+    }
+
+    .modal-backdrop.open {
+      display: flex;
+    }
+
+    .modal {
+      background: var(--bg-card);
+      border: 1px solid var(--border-medium);
+      border-radius: var(--radius-xl);
+      box-shadow: var(--shadow-lg);
+      width: 100%;
+      max-width: 640px;
+      max-height: 90vh;
+      overflow-y: auto;
+      animation: modalIn 0.22s ease;
+    }
+
+    .modal-lg {
+      max-width: 800px;
+    }
+
+    @keyframes modalIn {
+      from {
+        opacity: 0;
+        transform: scale(0.96) translateY(12px);
+      }
+
+      to {
+        opacity: 1;
+        transform: scale(1) translateY(0);
+      }
+    }
+
+    .modal-header {
+      display: flex;
+      align-items: center;
+      justify-content: space-between;
+      padding: 20px 24px 16px;
+      border-bottom: 1px solid var(--border-subtle);
+    }
+
+    .modal-title {
+      font-size: 16px;
+      font-weight: 700;
+    }
+
+    .modal-close {
+      width: 30px;
+      height: 30px;
+      background: var(--bg-elevated);
+      border: 1px solid var(--border-subtle);
+      border-radius: var(--radius-sm);
+      color: var(--text-secondary);
+      font-size: 18px;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      cursor: pointer;
+      transition: all var(--transition);
+    }
+
+    .modal-close:hover {
+      background: var(--bg-hover);
+      color: var(--text-primary);
+    }
+
+    .modal-body {
+      padding: 24px;
+    }
+
+    .modal-footer {
+      padding: 16px 24px;
+      border-top: 1px solid var(--border-subtle);
+      display: flex;
+      justify-content: flex-end;
+      gap: 10px;
+    }
+
+    /* Toast */
+    #toast-container {
+      position: fixed;
+      bottom: 24px;
+      right: 24px;
+      z-index: 9999;
+      display: flex;
+      flex-direction: column;
+      gap: 8px;
+    }
+
+    .toast {
+      background: var(--bg-elevated);
+      border: 1px solid var(--border-medium);
+      border-radius: var(--radius-md);
+      padding: 12px 16px;
+      font-size: 13px;
+      font-weight: 500;
+      display: flex;
+      align-items: center;
+      gap: 10px;
+      box-shadow: var(--shadow-lg);
+      animation: toastIn 0.3s ease;
+      min-width: 280px;
+      max-width: 380px;
+    }
+
+    .toast.success {
+      border-left: 3px solid #34D399;
+    }
+
+    .toast.error {
+      border-left: 3px solid #F87171;
+    }
+
+    .toast.info {
+      border-left: 3px solid #60A5FA;
+    }
+
+    @keyframes toastIn {
+      from {
+        opacity: 0;
+        transform: translateX(20px);
+      }
+
+      to {
+        opacity: 1;
+        transform: translateX(0);
+      }
+    }
+
+    /* Tabs */
+    .tabs {
+      display: flex;
+      gap: 4px;
+      background: var(--bg-elevated);
+      padding: 4px;
+      border-radius: var(--radius-md);
+      margin-bottom: 24px;
+    }
+
+    .tab {
+      padding: 7px 16px;
+      border-radius: var(--radius-sm);
+      font-size: 13px;
+      font-weight: 600;
+      color: var(--text-muted);
+      cursor: pointer;
+      transition: all var(--transition);
+    }
+
+    .tab.active {
+      background: var(--bg-card);
+      color: var(--text-primary);
+      box-shadow: var(--shadow-sm);
+    }
+
+    .tab:hover:not(.active) {
+      color: var(--text-secondary);
+    }
+
+    /* Search / Toolbar */
+    .toolbar {
+      display: flex;
+      align-items: center;
+      gap: 12px;
+      margin-bottom: 20px;
+      flex-wrap: wrap;
+    }
+
+    .search-wrap {
+      position: relative;
+      flex: 1;
+      min-width: 200px;
+      max-width: 360px;
+    }
+
+    .search-wrap input {
+      padding-left: 36px;
+      background: var(--bg-elevated);
+    }
+
+    .search-icon {
+      position: absolute;
+      left: 12px;
+      top: 50%;
+      transform: translateY(-50%);
+      font-size: 14px;
+      color: var(--text-muted);
+      pointer-events: none;
+    }
+
+    /* Empty state */
+    .empty-state {
+      text-align: center;
+      padding: 48px 24px;
+      color: var(--text-muted);
+    }
+
+    .empty-icon {
+      font-size: 40px;
+      margin-bottom: 12px;
+      opacity: 0.5;
+    }
+
+    .empty-title {
+      font-size: 15px;
+      font-weight: 600;
+      color: var(--text-secondary);
+      margin-bottom: 6px;
+    }
+
+    .empty-sub {
+      font-size: 13px;
+    }
+
+    /* Loading */
+    .loading {
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      padding: 32px;
+      color: var(--text-muted);
+      gap: 10px;
+    }
+
+    .spinner {
+      width: 20px;
+      height: 20px;
+      border: 2px solid var(--border-medium);
+      border-top-color: #4F6BFF;
+      border-radius: 50%;
+      animation: spin 0.8s linear infinite;
+    }
+
+    @keyframes spin {
+      to {
+        transform: rotate(360deg);
+      }
+    }
+
+    /* Coop avatar */
+    .coop-avatar {
+      width: 32px;
+      height: 32px;
+      border-radius: var(--radius-sm);
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      font-size: 13px;
+      font-weight: 800;
+      color: white;
+      flex-shrink: 0;
+    }
+
+    /* Section separator */
+    .section-sep {
+      border: none;
+      border-top: 1px solid var(--border-subtle);
+      margin: 20px 0;
+    }
+
+    /* Indicador tipo */
+    .tipo-pill {
+      display: inline-flex;
+      align-items: center;
+      gap: 4px;
+      font-size: 10px;
+      font-weight: 700;
+      text-transform: uppercase;
+      letter-spacing: 0.06em;
+      padding: 2px 8px;
+      border-radius: 99px;
+    }
+
+    .tipo-receita {
+      background: rgba(16, 185, 129, 0.10);
+      color: #34D399;
+    }
+
+    .tipo-despesa {
+      background: rgba(239, 68, 68, 0.10);
+      color: #F87171;
+    }
+
+    .tipo-neutro {
+      background: rgba(255, 255, 255, 0.05);
+      color: var(--text-muted);
+    }
+
+    /* Percentual field */
+    .perc-wrap {
+      position: relative;
+    }
+
+    .perc-wrap input {
+      padding-right: 32px;
+    }
+
+    .perc-suffix {
+      position: absolute;
+      right: 12px;
+      top: 50%;
+      transform: translateY(-50%);
+      color: var(--text-muted);
+      font-size: 13px;
+      pointer-events: none;
+    }
+
+    /* Color picker para cooperativa */
+    .color-options {
+      display: flex;
+      gap: 8px;
+      flex-wrap: wrap;
+      margin-top: 4px;
+    }
+
+    .color-dot {
+      width: 28px;
+      height: 28px;
+      border-radius: 50%;
+      cursor: pointer;
+      border: 2px solid transparent;
+      transition: all var(--transition);
+    }
+
+    .color-dot.selected {
+      border-color: white;
+      transform: scale(1.15);
+    }
+
+    /* Orbs background */
+    .bg-orbs {
+      position: fixed;
+      inset: 0;
+      pointer-events: none;
+      z-index: 0;
+      overflow: hidden;
+    }
+
+    .orb {
+      position: absolute;
+      border-radius: 50%;
+      filter: blur(100px);
+      opacity: 0.07;
+    }
+
+    .orb-1 {
+      width: 600px;
+      height: 600px;
+      background: #4F6BFF;
+      top: -200px;
+      left: -200px;
+    }
+
+    .orb-2 {
+      width: 400px;
+      height: 400px;
+      background: #C026D3;
+      bottom: -100px;
+      right: -100px;
+      opacity: 0.05;
+    }
+
+    /* Info row */
+    .info-row {
+      display: flex;
+      align-items: center;
+      gap: 8px;
+      font-size: 13px;
+      padding: 6px 0;
+      border-bottom: 1px solid var(--border-subtle);
+    }
+
+    .info-row:last-child {
+      border-bottom: none;
+    }
+
+    .info-label {
+      color: var(--text-muted);
+      font-size: 11px;
+      font-weight: 600;
+      text-transform: uppercase;
+      letter-spacing: 0.04em;
+      width: 160px;
+      flex-shrink: 0;
+    }
+
+    .info-value {
+      color: var(--text-primary);
+    }
+
+    /* ═══════════════════════════════════════════
+       RESPONSIVE
+    ═══════════════════════════════════════════ */
+    @media (max-width: 768px) {
+      :root {
+        --sidebar-w: 0px;
+      }
+
+      .sidebar {
+        transform: translateX(-240px);
+        width: 240px;
+      }
+
+      .sidebar.open {
+        transform: translateX(0);
+      }
+
+      .main-content {
+        margin-left: 0;
+      }
+
+      .form-grid-2,
+      .form-grid-3,
+      .form-grid-4 {
+        grid-template-columns: 1fr;
+      }
+
+      .page {
+        padding: 16px;
+      }
+
+      .stats-grid {
+        grid-template-columns: 1fr 1fr;
+      }
+    }
+  </style>
+</head>
+
+<body>
+
+  <!-- Orbs de fundo -->
+  <div class="bg-orbs">
+    <div class="orb orb-1"></div>
+    <div class="orb orb-2"></div>
+  </div>
+
+  <div id="app">
+
+    <!-- ╔══════════════════════════════╗ -->
+    <!-- ║          SIDEBAR             ║ -->
+    <!-- ╚══════════════════════════════╝ -->
+    <aside class="sidebar" id="sidebar">
+      <div class="sidebar-logo">
+        <div class="logo-icon">V</div>
+        <div>
+          <div class="logo-text">VSM2</div>
+          <div class="logo-sub">ERP Financeiro</div>
+        </div>
+      </div>
+
+      <nav class="sidebar-nav">
+        <div class="nav-section-label">Geral</div>
+        <div class="nav-item active" data-page="dashboard" onclick="navigate('dashboard')">
+          <span class="nav-icon">📊</span> Dashboard
+        </div>
+
+        <div class="nav-section-label">Cadastros</div>
+        <div class="nav-item" data-page="cooperativas" onclick="navigate('cooperativas')">
+          <span class="nav-icon">🏢</span> Cooperativas
+        </div>
+        <div class="nav-item" data-page="plano-contas" onclick="navigate('plano-contas')">
+          <span class="nav-icon">📋</span> Plano de Contas
+        </div>
+
+        <div class="nav-section-label">Honorários</div>
+        <div class="nav-item" data-page="acordos" onclick="navigate('acordos')">
+          <span class="nav-icon">⚖️</span> Acordos
+        </div>
+        <div class="nav-item" data-page="protocolos" onclick="navigate('protocolos')">
+          <span class="nav-icon">📄</span> Protocolos
+        </div>
+        <div class="nav-item" data-page="penhoras" onclick="navigate('penhoras')">
+          <span class="nav-icon">🔒</span> Penhoras
+        </div>
+        <div class="nav-item" data-page="alvaras" onclick="navigate('alvaras')">
+          <span class="nav-icon">📜</span> Alvarás
+        </div>
+
+        <div class="nav-section-label">Financeiro</div>
+        <div class="nav-item" data-page="contas-receber" onclick="navigate('contas-receber')">
+          <span class="nav-icon">💰</span> Contas a Receber
+        </div>
+        <div class="nav-item" data-page="contas-pagar" onclick="navigate('contas-pagar')">
+          <span class="nav-icon">💸</span> Contas a Pagar
+        </div>
+        <div class="nav-item" data-page="relatorios" onclick="navigate('relatorios')">
+          <span class="nav-icon">📤</span> Relatórios Mensais
+        </div>
+
+        <div class="nav-section-label">Análise</div>
+        <div class="nav-item" data-page="dre" onclick="navigate('dre')">
+          <span class="nav-icon">📈</span> DRE
+        </div>
+      </nav>
+
+      <div class="sidebar-footer">
+        <div style="font-size:12px;font-weight:600;color:var(--text-secondary)">VSM2 v1.0</div>
+        <div>ERP Jurídico Cooperativo</div>
+      </div>
+    </aside>
+
+    <!-- ╔══════════════════════════════╗ -->
+    <!-- ║        MAIN CONTENT          ║ -->
+    <!-- ╚══════════════════════════════╝ -->
+    <main class="main-content">
+
+      <!-- HEADER -->
+      <header class="header">
+        <div>
+          <div class="header-title" id="header-title">Dashboard</div>
+          <div class="header-subtitle" id="header-subtitle">Visão geral do sistema</div>
+        </div>
+        <div class="header-actions">
+          <div id="header-cta"></div>
+        </div>
+      </header>
+
+      <!-- ┌──────────────────────────────┐ -->
+      <!-- │  PAGE: DASHBOARD             │ -->
+      <!-- └──────────────────────────────┘ -->
+      <div class="page active" id="page-dashboard">
+        <div class="stats-grid" id="dash-stats">
+          <div class="stat-card green">
+            <div class="stat-label">Cooperativas Ativas</div>
+            <div class="stat-value" id="stat-coops">—</div>
+            <div class="stat-sub">cadastradas no sistema</div>
+          </div>
+          <div class="stat-card blue">
+            <div class="stat-label">Contas do Plano</div>
+            <div class="stat-value" id="stat-plano">—</div>
+            <div class="stat-sub">categorias ativas</div>
+          </div>
+          <div class="stat-card purple">
+            <div class="stat-label">Acordos Ativos</div>
+            <div class="stat-value" id="stat-acordos">—</div>
+            <div class="stat-sub">em andamento</div>
+          </div>
+          <div class="stat-card amber">
+            <div class="stat-label">Parcelas Vencidas</div>
+            <div class="stat-value" id="stat-vencidas">—</div>
+            <div class="stat-sub">aguardando baixa</div>
+          </div>
+        </div>
+
+        <div style="display:grid;grid-template-columns:1fr 1fr;gap:20px">
+          <div class="card">
+            <div class="card-header">
+              <div>
+                <div class="card-title">Cooperativas</div>
+                <div class="card-subtitle">Resumo rápido</div>
+              </div>
+            </div>
+            <div id="dash-coops-list">
+              <div class="loading">
+                <div class="spinner"></div> Carregando...
+              </div>
+            </div>
+          </div>
+          <div class="card">
+            <div class="card-header">
+              <div>
+                <div class="card-title">Parcelas Vencidas</div>
+                <div class="card-subtitle">Aguardando confirmação da cooperativa</div>
+              </div>
+            </div>
+            <div id="dash-vencidas-list">
+              <div class="loading">
+                <div class="spinner"></div> Carregando...
+              </div>
+            </div>
+          </div>
+        </div>
+      </div>
+
+      <!-- ┌──────────────────────────────┐ -->
+      <!-- │  PAGE: COOPERATIVAS          │ -->
+      <!-- └──────────────────────────────┘ -->
+      <div class="page" id="page-cooperativas">
+        <div class="toolbar">
+          <div class="search-wrap">
+            <span class="search-icon">🔍</span>
+            <input type="text" placeholder="Buscar cooperativa..." id="search-coop" oninput="filterCoops()">
+          </div>
+          <div style="margin-left:auto"></div>
+          <button class="btn btn-primary" onclick="openModal('modal-coop')">
+            ➕ Nova Cooperativa
+          </button>
+        </div>
+
+        <div class="card">
+          <div id="coops-table-wrap">
+            <div class="loading">
+              <div class="spinner"></div> Carregando...
+            </div>
+          </div>
+        </div>
+      </div>
+
+      <!-- ┌──────────────────────────────┐ -->
+      <!-- │  PAGE: PLANO DE CONTAS       │ -->
+      <!-- └──────────────────────────────┘ -->
+      <div class="page" id="page-plano-contas">
+        <div class="tabs" id="plano-tabs">
+          <div class="tab active" onclick="filterPlano('TODOS')">Todas</div>
+          <div class="tab" onclick="filterPlano('RECEITA')">Receitas</div>
+          <div class="tab" onclick="filterPlano('DESPESA')">Despesas</div>
+        </div>
+
+        <div class="toolbar">
+          <div class="search-wrap">
+            <span class="search-icon">🔍</span>
+            <input type="text" placeholder="Buscar conta..." id="search-plano" oninput="filterPlanoSearch()">
+          </div>
+          <div style="margin-left:auto"></div>
+          <button class="btn btn-primary" onclick="openModal('modal-plano')">
+            ➕ Nova Conta
+          </button>
+        </div>
+
+        <div class="card">
+          <div id="plano-table-wrap">
+            <div class="loading">
+              <div class="spinner"></div> Carregando...
+            </div>
+          </div>
+        </div>
+      </div>
+
+      <!-- ┌──────────────────────────────┐ -->
+      <!-- │  PAGES EM BREVE              │ -->
+      <!-- └──────────────────────────────┘ -->
+      <div class="page" id="page-acordos">
+        <div class="empty-state">
+          <div class="empty-icon">⚖️</div>
+          <div class="empty-title">Módulo de Acordos</div>
+          <div class="empty-sub">Em desenvolvimento — disponível na próxima sessão</div>
+        </div>
+      </div>
+      <div class="page" id="page-protocolos">
+        <div class="empty-state">
+          <div class="empty-icon">📄</div>
+          <div class="empty-title">Módulo de Protocolos</div>
+          <div class="empty-sub">Em desenvolvimento</div>
+        </div>
+      </div>
+      <div class="page" id="page-penhoras">
+        <div class="empty-state">
+          <div class="empty-icon">🔒</div>
+          <div class="empty-title">Módulo de Penhoras</div>
+          <div class="empty-sub">Em desenvolvimento</div>
+        </div>
+      </div>
+      <div class="page" id="page-alvaras">
+        <div class="empty-state">
+          <div class="empty-icon">📜</div>
+          <div class="empty-title">Módulo de Alvarás</div>
+          <div class="empty-sub">Em desenvolvimento</div>
+        </div>
+      </div>
+      <div class="page" id="page-contas-receber">
+        <div class="empty-state">
+          <div class="empty-icon">💰</div>
+          <div class="empty-title">Contas a Receber</div>
+          <div class="empty-sub">Em desenvolvimento</div>
+        </div>
+      </div>
+      <div class="page" id="page-contas-pagar">
+        <div class="empty-state">
+          <div class="empty-icon">💸</div>
+          <div class="empty-title">Contas a Pagar</div>
+          <div class="empty-sub">Em desenvolvimento</div>
+        </div>
+      </div>
+      <div class="page" id="page-relatorios">
+        <div class="empty-state">
+          <div class="empty-icon">📤</div>
+          <div class="empty-title">Relatórios Mensais</div>
+          <div class="empty-sub">Em desenvolvimento</div>
+        </div>
+      </div>
+      <div class="page" id="page-dre">
+        <div class="empty-state">
+          <div class="empty-icon">📈</div>
+          <div class="empty-title">DRE</div>
+          <div class="empty-sub">Em desenvolvimento</div>
+        </div>
+      </div>
+
+    </main>
+  </div>
+
+  <!-- ╔══════════════════════════════════════╗ -->
+  <!-- ║   MODAL: COOPERATIVA                 ║ -->
+  <!-- ╚══════════════════════════════════════╝ -->
+  <div class="modal-backdrop" id="modal-coop">
+    <div class="modal modal-lg">
+      <div class="modal-header">
+        <div class="modal-title" id="modal-coop-title">Nova Cooperativa</div>
+        <button class="modal-close" onclick="closeModal('modal-coop')">✕</button>
+      </div>
+      <div class="modal-body">
+        <input type="hidden" id="coop-id">
+
+        <div style="margin-bottom:16px">
+          <label style="display:block;margin-bottom:8px">Cor de Identificação</label>
+          <div class="color-options" id="color-options">
+            <div class="color-dot selected" style="background:#4F6BFF" data-color="#4F6BFF" onclick="selectColor(this)">
+            </div>
+            <div class="color-dot" style="background:#7C3AED" data-color="#7C3AED" onclick="selectColor(this)"></div>
+            <div class="color-dot" style="background:#10B981" data-color="#10B981" onclick="selectColor(this)"></div>
+            <div class="color-dot" style="background:#F59E0B" data-color="#F59E0B" onclick="selectColor(this)"></div>
+            <div class="color-dot" style="background:#EF4444" data-color="#EF4444" onclick="selectColor(this)"></div>
+            <div class="color-dot" style="background:#EC4899" data-color="#EC4899" onclick="selectColor(this)"></div>
+            <div class="color-dot" style="background:#06B6D4" data-color="#06B6D4" onclick="selectColor(this)"></div>
+            <div class="color-dot" style="background:#84CC16" data-color="#84CC16" onclick="selectColor(this)"></div>
+          </div>
+        </div>
+
+        <div class="form-grid form-grid-2">
+          <div class="form-group">
+            <label>Nome Completo *</label>
+            <input type="text" id="coop-nome" placeholder="Ex: Sicredi Norte Sul" required>
+          </div>
+          <div class="form-group">
+            <label>Sigla</label>
+            <input type="text" id="coop-sigla" placeholder="Ex: SICREDI NS" maxlength="20">
+          </div>
+          <div class="form-group">
+            <label>CNPJ</label>
+            <input type="text" id="coop-cnpj" placeholder="00.000.000/0001-00" maxlength="18">
+          </div>
+          <div class="form-group">
+            <label>% Honorários Padrão *</label>
+            <div class="perc-wrap">
+              <input type="number" id="coop-perc" placeholder="Ex: 9.00" step="0.01" min="0" max="100">
+              <span class="perc-suffix">%</span>
+            </div>
+          </div>
+        </div>
+
+        <hr class="section-sep">
+        <div
+          style="font-size:12px;font-weight:700;color:var(--text-muted);text-transform:uppercase;letter-spacing:0.06em;margin-bottom:14px">
+          Dados Bancários</div>
+        <div class="form-grid form-grid-2">
+          <div class="form-group">
+            <label>Banco</label>
+            <input type="text" id="coop-banco" placeholder="Nome do banco">
+          </div>
+          <div class="form-group">
+            <label>Agência</label>
+            <input type="text" id="coop-agencia" placeholder="0000">
+          </div>
+          <div class="form-group">
+            <label>Conta Corrente</label>
+            <input type="text" id="coop-conta" placeholder="00000-0">
+          </div>
+          <div class="form-group">
+            <label>Chave PIX</label>
+            <input type="text" id="coop-pix" placeholder="CPF, CNPJ, e-mail ou aleatória">
+          </div>
+        </div>
+
+        <hr class="section-sep">
+        <div
+          style="font-size:12px;font-weight:700;color:var(--text-muted);text-transform:uppercase;letter-spacing:0.06em;margin-bottom:14px">
+          Contato</div>
+        <div class="form-grid form-grid-3">
+          <div class="form-group">
+            <label>Nome do Contato</label>
+            <input type="text" id="coop-contato-nome" placeholder="Responsável">
+          </div>
+          <div class="form-group">
+            <label>E-mail</label>
+            <input type="email" id="coop-contato-email" placeholder="contato@cooperativa.com">
+          </div>
+          <div class="form-group">
+            <label>Telefone</label>
+            <input type="text" id="coop-contato-tel" placeholder="(00) 00000-0000">
+          </div>
+        </div>
+
+        <div class="form-group" style="margin-top:16px">
+          <label>Observações</label>
+          <textarea id="coop-obs" placeholder="Informações adicionais sobre a cooperativa..."></textarea>
+        </div>
+      </div>
+      <div class="modal-footer">
+        <button class="btn btn-secondary" onclick="closeModal('modal-coop')">Cancelar</button>
+        <button class="btn btn-primary" onclick="saveCoop()">
+          <span id="btn-save-coop-text">✓ Salvar Cooperativa</span>
+        </button>
+      </div>
+    </div>
+  </div>
+
+  <!-- ╔══════════════════════════════════════╗ -->
+  <!-- ║   MODAL: DETALHE COOPERATIVA         ║ -->
+  <!-- ╚══════════════════════════════════════╝ -->
+  <div class="modal-backdrop" id="modal-coop-detail">
+    <div class="modal modal-lg">
+      <div class="modal-header">
+        <div style="display:flex;align-items:center;gap:12px">
+          <div class="coop-avatar" id="detail-avatar" style="width:40px;height:40px;font-size:16px"></div>
+          <div>
+            <div class="modal-title" id="detail-nome"></div>
+            <div style="font-size:12px;color:var(--text-muted);margin-top:2px" id="detail-cnpj"></div>
+          </div>
+        </div>
+        <button class="modal-close" onclick="closeModal('modal-coop-detail')">✕</button>
+      </div>
+      <div class="modal-body" id="detail-body"></div>
+      <div class="modal-footer">
+        <button class="btn btn-secondary" onclick="closeModal('modal-coop-detail')">Fechar</button>
+        <button class="btn btn-primary" id="detail-edit-btn">✏️ Editar</button>
+      </div>
+    </div>
+  </div>
+
+  <!-- ╔══════════════════════════════════════╗ -->
+  <!-- ║   MODAL: PLANO DE CONTAS             ║ -->
+  <!-- ╚══════════════════════════════════════╝ -->
+  <div class="modal-backdrop" id="modal-plano">
+    <div class="modal">
+      <div class="modal-header">
+        <div class="modal-title" id="modal-plano-title">Nova Conta</div>
+        <button class="modal-close" onclick="closeModal('modal-plano')">✕</button>
+      </div>
+      <div class="modal-body">
+        <input type="hidden" id="plano-id">
+        <div class="form-grid form-grid-2">
+          <div class="form-group">
+            <label>Código *</label>
+            <input type="text" id="plano-codigo" placeholder="Ex: 1.10 ou 3.9">
+          </div>
+          <div class="form-group">
+            <label>Tipo *</label>
+            <select id="plano-tipo">
+              <option value="RECEITA">💚 Receita</option>
+              <option value="DESPESA">❤️ Despesa</option>
+              <option value="NEUTRO">⚪ Neutro</option>
+            </select>
+          </div>
+          <div class="form-group full">
+            <label>Categoria *</label>
+            <input type="text" id="plano-categoria" placeholder="Ex: RECEITA OPERACIONAL BRUTA">
+          </div>
+          <div class="form-group full">
+            <label>Subcategoria</label>
+            <input type="text" id="plano-subcategoria" placeholder="Ex: Honorários - Sicredi Norte Sul">
+          </div>
+          <div class="form-group">
+            <label>Ordem de Exibição</label>
+            <input type="number" id="plano-ordem" placeholder="0" min="0">
+          </div>
+          <div class="form-group">
+            <label>Status</label>
+            <select id="plano-ativa">
+              <option value="true">✅ Ativa</option>
+              <option value="false">❌ Inativa</option>
+            </select>
+          </div>
+          <div class="form-group full">
+            <label>Descrição</label>
+            <textarea id="plano-descricao" placeholder="Detalhes sobre essa conta contábil..."></textarea>
+          </div>
+        </div>
+      </div>
+      <div class="modal-footer">
+        <button class="btn btn-secondary" onclick="closeModal('modal-plano')">Cancelar</button>
+        <button class="btn btn-primary" onclick="savePlano()">✓ Salvar Conta</button>
+      </div>
+    </div>
+  </div>
+
+  <!-- ╔══════════════════════════════════════╗ -->
+  <!-- ║   MODAL: CONFIRMAR DELETE            ║ -->
+  <!-- ╚══════════════════════════════════════╝ -->
+  <div class="modal-backdrop" id="modal-confirm">
+    <div class="modal" style="max-width:420px">
+      <div class="modal-header">
+        <div class="modal-title">⚠️ Confirmar Exclusão</div>
+        <button class="modal-close" onclick="closeModal('modal-confirm')">✕</button>
+      </div>
+      <div class="modal-body">
+        <p style="color:var(--text-secondary);line-height:1.7" id="confirm-message">Tem certeza que deseja excluir este
+          item? Esta ação não pode ser desfeita.</p>
+      </div>
+      <div class="modal-footer">
+        <button class="btn btn-secondary" onclick="closeModal('modal-confirm')">Cancelar</button>
+        <button class="btn btn-danger" id="btn-confirm-delete">🗑 Excluir</button>
+      </div>
+    </div>
+  </div>
+
+  <!-- Toast container -->
+  <div id="toast-container"></div>
+
+  <!-- ╔══════════════════════════════════════╗ -->
+  <!-- ║              JAVASCRIPT              ║ -->
+  <!-- ╚══════════════════════════════════════╝ -->
+  <script>
+    // ─── SUPABASE CONFIG ─────────────────────────────────────────────────────────
+    const SUPABASE_URL = 'https://xquhvmjjsynzovedgstg.supabase.co';
+    const SUPABASE_KEY = 'eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6InhxdWh2bWpqc3luem92ZWRnc3RnIiwicm9sZSI6ImFub24iLCJpYXQiOjE3NzQzMTAzODYsImV4cCI6MjA4OTg4NjM4Nn0.6s2KtLHpNnmc1e9ZgqmLTKCogIDWlNNEJLX35uERkZ8';
+    const sb = supabase.createClient(SUPABASE_URL, SUPABASE_KEY);
+
+    // ─── STATE ───────────────────────────────────────────────────────────────────
+    let state = {
+      coops: [],
+      plano: [],
+      planoFilter: 'TODOS',
+      selectedColor: '#4F6BFF',
+      currentPage: 'dashboard'
+    };
+
+    // ─── ROUTING ─────────────────────────────────────────────────────────────────
+    const pageConfig = {
+      'dashboard': { title: 'Dashboard', subtitle: 'Visão geral do sistema' },
+      'cooperativas': { title: 'Cooperativas', subtitle: 'Cadastro e gestão das cooperativas clientes' },
+      'plano-contas': { title: 'Plano de Contas', subtitle: 'Categorias e subcategorias contábeis' },
+      'acordos': { title: 'Acordos Judiciais', subtitle: 'Controle de acordos e parcelas' },
+      'protocolos': { title: 'Protocolos', subtitle: 'Protocolos de petições iniciais' },
+      'penhoras': { title: 'Penhoras', subtitle: 'Controle de amortizações de penhoras' },
+      'alvaras': { title: 'Alvarás', subtitle: 'Alvarás judiciais e honorários' },
+      'contas-receber': { title: 'Contas a Receber', subtitle: 'Entradas e recebimentos' },
+      'contas-pagar': { title: 'Contas a Pagar', subtitle: 'Saídas, custas e ressarcimentos' },
+      'relatorios': { title: 'Relatórios Mensais', subtitle: 'Envio e controle de relatórios por cooperativa' },
+      'dre': { title: 'DRE', subtitle: 'Demonstrativo de Resultado do Exercício' },
+    };
+
+    function navigate(page) {
+      document.querySelectorAll('.page').forEach(p => p.classList.remove('active'));
+      document.querySelectorAll('.nav-item').forEach(n => n.classList.remove('active'));
+      document.getElementById(`page-${page}`).classList.add('active');
+      document.querySelector(`[data-page="${page}"]`).classList.add('active');
+
+      const cfg = pageConfig[page] || {};
+      document.getElementById('header-title').textContent = cfg.title || page;
+      document.getElementById('header-subtitle').textContent = cfg.subtitle || '';
+
+      state.currentPage = page;
+
+      if (page === 'cooperativas') renderCoopsPage();
+      if (page === 'plano-contas') renderPlanoPage();
+      if (page === 'dashboard') renderDashboard();
+    }
+
+    // ─── TOAST ───────────────────────────────────────────────────────────────────
+    function toast(msg, type = 'info') {
+      const icons = { success: '✅', error: '❌', info: 'ℹ️' };
+      const el = document.createElement('div');
+      el.className = `toast ${type}`;
+      el.innerHTML = `<span>${icons[type]}</span><span>${msg}</span>`;
+      document.getElementById('toast-container').appendChild(el);
+      setTimeout(() => el.remove(), 3800);
+    }
+
+    // ─── MODAL ───────────────────────────────────────────────────────────────────
+    function openModal(id) {
+      document.getElementById(id).classList.add('open');
+    }
+    function closeModal(id) {
+      document.getElementById(id).classList.remove('open');
+    }
+    document.querySelectorAll('.modal-backdrop').forEach(m => {
+      m.addEventListener('click', e => { if (e.target === m) m.classList.remove('open'); });
+    });
+
+    // ─── CONFIRM DELETE ──────────────────────────────────────────────────────────
+    function confirmDelete(message, onConfirm) {
+      document.getElementById('confirm-message').textContent = message;
+      const btn = document.getElementById('btn-confirm-delete');
+      const newBtn = btn.cloneNode(true);
+      btn.parentNode.replaceChild(newBtn, btn);
+      newBtn.addEventListener('click', () => { onConfirm(); closeModal('modal-confirm'); });
+      openModal('modal-confirm');
+    }
+
+    // ─── CORES ───────────────────────────────────────────────────────────────────
+    function selectColor(el) {
+      document.querySelectorAll('.color-dot').forEach(d => d.classList.remove('selected'));
+      el.classList.add('selected');
+      state.selectedColor = el.dataset.color;
+    }
+
+    function getCoopInitials(nome) {
+      return nome.split(' ').slice(0, 2).map(w => w[0]).join('').toUpperCase();
+    }
+
+    function coopColor(coop) {
+      const colors = ['#4F6BFF', '#7C3AED', '#10B981', '#F59E0B', '#EF4444', '#EC4899', '#06B6D4', '#84CC16'];
+      const idx = (coop.nome || '').charCodeAt(0) % colors.length;
+      return coop.cor || colors[idx];
+    }
+
+    // ─── DASHBOARD ───────────────────────────────────────────────────────────────
+    async function renderDashboard() {
+      const [{ count: cCount }, { count: pCount }, { count: aCount }, { count: vCount }] = await Promise.all([
+        sb.from('cooperativas').select('*', { count: 'exact', head: true }).eq('ativa', true),
+        sb.from('plano_contas').select('*', { count: 'exact', head: true }).eq('ativa', true),
+        sb.from('acordos').select('*', { count: 'exact', head: true }).eq('status', 'ATIVO'),
+        sb.from('parcelas_acordo').select('*', { count: 'exact', head: true }).eq('status', 'VENCIDO'),
+      ]);
+      document.getElementById('stat-coops').textContent = cCount ?? 0;
+      document.getElementById('stat-plano').textContent = pCount ?? 0;
+      document.getElementById('stat-acordos').textContent = aCount ?? 0;
+      document.getElementById('stat-vencidas').textContent = vCount ?? 0;
+
+      const { data: coops } = await sb.from('cooperativas').select('*').eq('ativa', true).order('nome');
+      const coopList = document.getElementById('dash-coops-list');
+      if (!coops?.length) {
+        coopList.innerHTML = `<div class="empty-state"><div class="empty-icon">🏢</div><div class="empty-title">Nenhuma cooperativa</div></div>`;
+      } else {
+        coopList.innerHTML = coops.map(c => `
+      <div style="display:flex;align-items:center;gap:12px;padding:10px 0;border-bottom:1px solid var(--border-subtle)">
+        <div class="coop-avatar" style="background:${coopColor(c)}">${getCoopInitials(c.nome)}</div>
+        <div style="flex:1">
+          <div style="font-size:13px;font-weight:600;color:var(--text-primary)">${c.nome}</div>
+          <div style="font-size:11px;color:var(--text-muted)">${c.sigla || ''}</div>
+        </div>
+        <div style="text-align:right">
+          <div style="font-size:14px;font-weight:700;color:var(--text-accent)">${c.percentual_honorarios}%</div>
+          <div style="font-size:10px;color:var(--text-muted)">honorários</div>
+        </div>
+      </div>
+    `).join('');
+      }
+
+      const { data: vencidas } = await sb.from('parcelas_acordo')
+        .select('*, acordos(devedor_nome, cooperativas(nome))')
+        .eq('status', 'VENCIDO')
+        .order('data_vencimento')
+        .limit(8);
+
+      const vList = document.getElementById('dash-vencidas-list');
+      if (!vencidas?.length) {
+        vList.innerHTML = `<div class="empty-state"><div class="empty-icon">✅</div><div class="empty-title">Nenhuma parcela vencida</div></div>`;
+      } else {
+        vList.innerHTML = vencidas.map(p => `
+      <div style="display:flex;align-items:center;gap:10px;padding:8px 0;border-bottom:1px solid var(--border-subtle)">
+        <span class="badge badge-red">VENCIDA</span>
+        <div style="flex:1;min-width:0">
+          <div style="font-size:12px;font-weight:600;color:var(--text-primary);white-space:nowrap;overflow:hidden;text-overflow:ellipsis">
+            ${p.acordos?.devedor_nome || '—'}
+          </div>
+          <div style="font-size:11px;color:var(--text-muted)">Venc: ${fmtDate(p.data_vencimento)} | Parcela ${p.numero_parcela}</div>
+        </div>
+        <div style="font-size:13px;font-weight:700;color:var(--text-primary)">${fmtMoney(p.valor)}</div>
+      </div>
+    `).join('');
+      }
+    }
+
+    // ─── COOPERATIVAS ─────────────────────────────────────────────────────────────
+    async function loadCoops() {
+      const { data, error } = await sb.from('cooperativas').select('*').order('nome');
+      if (error) { toast('Erro ao carregar cooperativas', 'error'); return; }
+      state.coops = data || [];
+    }
+
+    async function renderCoopsPage() {
+      await loadCoops();
+      renderCoopsTable(state.coops);
+    }
+
+    function renderCoopsTable(coops) {
+      const wrap = document.getElementById('coops-table-wrap');
+      if (!coops.length) {
+        wrap.innerHTML = `
+      <div class="empty-state">
+        <div class="empty-icon">🏢</div>
+        <div class="empty-title">Nenhuma cooperativa cadastrada</div>
+        <div class="empty-sub">Clique em "Nova Cooperativa" para começar</div>
+      </div>`;
+        return;
+      }
+      wrap.innerHTML = `
+    <div class="table-wrap">
+      <table>
+        <thead>
+          <tr>
+            <th>Cooperativa</th>
+            <th>CNPJ</th>
+            <th>% Honorários</th>
+            <th>Banco / PIX</th>
+            <th>Contato</th>
+            <th>Status</th>
+            <th>Ações</th>
+          </tr>
+        </thead>
+        <tbody>
+          ${coops.map(c => `
+            <tr>
+              <td>
+                <div style="display:flex;align-items:center;gap:10px">
+                  <div class="coop-avatar" style="background:${coopColor(c)}">${getCoopInitials(c.nome)}</div>
+                  <div>
+                    <div class="bold">${c.nome}</div>
+                    <div style="font-size:11px;color:var(--text-muted)">${c.sigla || ''}</div>
+                  </div>
+                </div>
+              </td>
+              <td><span style="font-family:var(--font-mono);font-size:12px">${c.cnpj || '—'}</span></td>
+              <td>
+                <span style="font-size:18px;font-weight:800;color:var(--text-accent)">${c.percentual_honorarios}%</span>
+              </td>
+              <td>
+                <div style="font-size:12px;color:var(--text-secondary)">${c.banco_nome || '—'}</div>
+                ${c.banco_pix ? `<div style="font-size:11px;color:var(--text-muted)">PIX: ${c.banco_pix}</div>` : ''}
+              </td>
+              <td>
+                <div style="font-size:12px">${c.contato_nome || '—'}</div>
+                ${c.contato_email ? `<div style="font-size:11px;color:var(--text-muted)">${c.contato_email}</div>` : ''}
+              </td>
+              <td>
+                ${c.ativa
+          ? '<span class="badge badge-green">● Ativa</span>'
+          : '<span class="badge badge-gray">● Inativa</span>'}
+              </td>
+              <td>
+                <div style="display:flex;gap:6px">
+                  <button class="btn btn-secondary btn-sm btn-icon" title="Ver detalhes" onclick="viewCoop('${c.id}')">👁</button>
+                  <button class="btn btn-secondary btn-sm btn-icon" title="Editar" onclick="editCoop('${c.id}')">✏️</button>
+                  <button class="btn btn-danger btn-sm btn-icon" title="Excluir" onclick="deleteCoop('${c.id}','${c.nome.replace(/'/g, "\\'")}')">🗑</button>
+                </div>
+              </td>
+            </tr>
+          `).join('')}
+        </tbody>
+      </table>
+    </div>`;
+    }
+
+    function filterCoops() {
+      const q = document.getElementById('search-coop').value.toLowerCase();
+      const filtered = state.coops.filter(c =>
+        c.nome.toLowerCase().includes(q) ||
+        (c.sigla || '').toLowerCase().includes(q) ||
+        (c.cnpj || '').includes(q)
+      );
+      renderCoopsTable(filtered);
+    }
+
+    function openNewCoopModal() {
+      document.getElementById('coop-id').value = '';
+      document.getElementById('modal-coop-title').textContent = 'Nova Cooperativa';
+      document.getElementById('btn-save-coop-text').textContent = '✓ Salvar Cooperativa';
+      ['nome', 'sigla', 'cnpj', 'perc', 'banco', 'agencia', 'conta', 'pix', 'contato-nome', 'contato-email', 'contato-tel', 'obs'].forEach(f => {
+        const el = document.getElementById(`coop-${f}`);
+        if (el) el.value = '';
+      });
+      state.selectedColor = '#4F6BFF';
+      document.querySelectorAll('.color-dot').forEach(d => {
+        d.classList.toggle('selected', d.dataset.color === '#4F6BFF');
+      });
+      openModal('modal-coop');
+    }
+
+    function editCoop(id) {
+      const c = state.coops.find(x => x.id === id);
+      if (!c) return;
+      document.getElementById('coop-id').value = id;
+      document.getElementById('modal-coop-title').textContent = 'Editar Cooperativa';
+      document.getElementById('btn-save-coop-text').textContent = '✓ Atualizar';
+      document.getElementById('coop-nome').value = c.nome || '';
+      document.getElementById('coop-sigla').value = c.sigla || '';
+      document.getElementById('coop-cnpj').value = c.cnpj || '';
+      document.getElementById('coop-perc').value = c.percentual_honorarios || '';
+      document.getElementById('coop-banco').value = c.banco_nome || '';
+      document.getElementById('coop-agencia').value = c.banco_agencia || '';
+      document.getElementById('coop-conta').value = c.banco_conta || '';
+      document.getElementById('coop-pix').value = c.banco_pix || '';
+      document.getElementById('coop-contato-nome').value = c.contato_nome || '';
+      document.getElementById('coop-contato-email').value = c.contato_email || '';
+      document.getElementById('coop-contato-tel').value = c.contato_telefone || '';
+      document.getElementById('coop-obs').value = c.observacoes || '';
+      state.selectedColor = c.cor || '#4F6BFF';
+      document.querySelectorAll('.color-dot').forEach(d => {
+        d.classList.toggle('selected', d.dataset.color === state.selectedColor);
+      });
+      openModal('modal-coop');
+    }
+
+    function viewCoop(id) {
+      const c = state.coops.find(x => x.id === id);
+      if (!c) return;
+      const color = coopColor(c);
+      document.getElementById('detail-avatar').style.background = color;
+      document.getElementById('detail-avatar').textContent = getCoopInitials(c.nome);
+      document.getElementById('detail-nome').textContent = c.nome;
+      document.getElementById('detail-cnpj').textContent = c.cnpj ? `CNPJ: ${c.cnpj}` : 'CNPJ não informado';
+
+      document.getElementById('detail-body').innerHTML = `
+    <div style="margin-bottom:16px">
+      <div class="info-row"><span class="info-label">Sigla</span><span class="info-value">${c.sigla || '—'}</span></div>
+      <div class="info-row"><span class="info-label">% Honorários</span><span class="info-value" style="font-size:18px;font-weight:800;color:var(--text-accent)">${c.percentual_honorarios}%</span></div>
+      <div class="info-row"><span class="info-label">Status</span><span class="info-value">${c.ativa ? '<span class="badge badge-green">● Ativa</span>' : '<span class="badge badge-gray">Inativa</span>'}</span></div>
+    </div>
+    <div style="font-size:11px;font-weight:700;color:var(--text-muted);text-transform:uppercase;letter-spacing:0.06em;margin-bottom:10px">Dados Bancários</div>
+    <div style="margin-bottom:16px">
+      <div class="info-row"><span class="info-label">Banco</span><span class="info-value">${c.banco_nome || '—'}</span></div>
+      <div class="info-row"><span class="info-label">Agência</span><span class="info-value">${c.banco_agencia || '—'}</span></div>
+      <div class="info-row"><span class="info-label">Conta</span><span class="info-value">${c.banco_conta || '—'}</span></div>
+      <div class="info-row"><span class="info-label">PIX</span><span class="info-value">${c.banco_pix || '—'}</span></div>
+    </div>
+    <div style="font-size:11px;font-weight:700;color:var(--text-muted);text-transform:uppercase;letter-spacing:0.06em;margin-bottom:10px">Contato</div>
+    <div>
+      <div class="info-row"><span class="info-label">Responsável</span><span class="info-value">${c.contato_nome || '—'}</span></div>
+      <div class="info-row"><span class="info-label">E-mail</span><span class="info-value">${c.contato_email || '—'}</span></div>
+      <div class="info-row"><span class="info-label">Telefone</span><span class="info-value">${c.contato_telefone || '—'}</span></div>
+    </div>
+    ${c.observacoes ? `<div style="margin-top:16px;padding:12px;background:var(--bg-elevated);border-radius:var(--radius-sm);font-size:13px;color:var(--text-secondary)">${c.observacoes}</div>` : ''}
+  `;
+      document.getElementById('detail-edit-btn').onclick = () => {
+        closeModal('modal-coop-detail');
+        editCoop(id);
+      };
+      openModal('modal-coop-detail');
+    }
+
+    async function saveCoop() {
+      const id = document.getElementById('coop-id').value;
+      const nome = document.getElementById('coop-nome').value.trim();
+      const perc = parseFloat(document.getElementById('coop-perc').value);
+      if (!nome) { toast('Nome da cooperativa é obrigatório', 'error'); return; }
+      if (isNaN(perc) || perc < 0) { toast('Percentual de honorários inválido', 'error'); return; }
+
+      const payload = {
+        nome,
+        sigla: document.getElementById('coop-sigla').value.trim() || null,
+        cnpj: document.getElementById('coop-cnpj').value.trim() || null,
+        percentual_honorarios: perc,
+        banco_nome: document.getElementById('coop-banco').value.trim() || null,
+        banco_agencia: document.getElementById('coop-agencia').value.trim() || null,
+        banco_conta: document.getElementById('coop-conta').value.trim() || null,
+        banco_pix: document.getElementById('coop-pix').value.trim() || null,
+        contato_nome: document.getElementById('coop-contato-nome').value.trim() || null,
+        contato_email: document.getElementById('coop-contato-email').value.trim() || null,
+        contato_telefone: document.getElementById('coop-contato-tel').value.trim() || null,
+        observacoes: document.getElementById('coop-obs').value.trim() || null,
+        cor: state.selectedColor,
+      };
+
+      let error;
+      if (id) {
+        ({ error } = await sb.from('cooperativas').update(payload).eq('id', id));
+      } else {
+        ({ error } = await sb.from('cooperativas').insert(payload));
+      }
+
+      if (error) { toast(`Erro: ${error.message}`, 'error'); return; }
+      toast(id ? 'Cooperativa atualizada!' : 'Cooperativa cadastrada!', 'success');
+      closeModal('modal-coop');
+      renderCoopsPage();
+    }
+
+    async function deleteCoop(id, nome) {
+      confirmDelete(`Excluir a cooperativa "${nome}"? Todos os dados vinculados serão afetados.`, async () => {
+        const { error } = await sb.from('cooperativas').delete().eq('id', id);
+        if (error) { toast(`Erro: ${error.message}`, 'error'); return; }
+        toast('Cooperativa excluída', 'success');
+        renderCoopsPage();
+      });
+    }
+
+    // ─── PLANO DE CONTAS ──────────────────────────────────────────────────────────
+    async function loadPlano() {
+      const { data, error } = await sb.from('plano_contas').select('*').order('ordem').order('codigo');
+      if (error) { toast('Erro ao carregar plano de contas', 'error'); return; }
+      state.plano = data || [];
+    }
+
+    async function renderPlanoPage() {
+      await loadPlano();
+      renderPlanoTable();
+    }
+
+    function filterPlano(tipo) {
+      state.planoFilter = tipo;
+      document.querySelectorAll('#plano-tabs .tab').forEach((t, i) => {
+        t.classList.toggle('active', ['TODOS', 'RECEITA', 'DESPESA'][i] === tipo);
+      });
+      renderPlanoTable();
+    }
+
+    function filterPlanoSearch() {
+      renderPlanoTable();
+    }
+
+    function renderPlanoTable() {
+      const q = (document.getElementById('search-plano')?.value || '').toLowerCase();
+      let data = state.plano;
+      if (state.planoFilter !== 'TODOS') data = data.filter(p => p.tipo === state.planoFilter);
+      if (q) data = data.filter(p =>
+        (p.codigo || '').toLowerCase().includes(q) ||
+        (p.categoria || '').toLowerCase().includes(q) ||
+        (p.subcategoria || '').toLowerCase().includes(q)
+      );
+
+      const wrap = document.getElementById('plano-table-wrap');
+      if (!data.length) {
+        wrap.innerHTML = `<div class="empty-state"><div class="empty-icon">📋</div><div class="empty-title">Nenhuma conta encontrada</div></div>`;
+        return;
+      }
+
+      // Agrupar por categoria
+      const grupos = {};
+      data.forEach(p => {
+        const cat = p.categoria || 'Sem categoria';
+        if (!grupos[cat]) grupos[cat] = { tipo: p.tipo, items: [] };
+        grupos[cat].items.push(p);
+      });
+
+      let html = `<div class="table-wrap"><table>
+    <thead><tr>
+      <th>Código</th><th>Categoria / Subcategoria</th><th>Tipo</th><th>Status</th><th>Ordem</th><th>Ações</th>
+    </tr></thead><tbody>`;
+
+      Object.entries(grupos).forEach(([cat, grupo]) => {
+        const tipoBadge = grupo.tipo === 'RECEITA'
+          ? '<span class="tipo-pill tipo-receita">▲ Receita</span>'
+          : grupo.tipo === 'DESPESA'
+            ? '<span class="tipo-pill tipo-despesa">▼ Despesa</span>'
+            : '<span class="tipo-pill tipo-neutro">● Neutro</span>';
+
+        html += `<tr style="background:var(--bg-elevated)">
+      <td colspan="6" style="padding:8px 14px">
+        <div style="display:flex;align-items:center;gap:10px">
+          ${tipoBadge}
+          <span style="font-size:12px;font-weight:700;color:var(--text-secondary);text-transform:uppercase;letter-spacing:0.04em">${cat}</span>
+        </div>
+      </td>
+    </tr>`;
+
+        grupo.items.forEach(p => {
+          html += `<tr>
+        <td><span style="font-family:var(--font-mono);font-size:12px;color:var(--text-muted)">${p.codigo}</span></td>
+        <td>
+          <div class="bold" style="padding-left:16px">
+            ${p.subcategoria || `<span style="color:var(--text-muted);font-style:italic">(categoria principal)</span>`}
+          </div>
+          ${p.descricao ? `<div style="font-size:11px;color:var(--text-muted);padding-left:16px">${p.descricao}</div>` : ''}
+        </td>
+        <td>${p.tipo === 'RECEITA' ? '<span class="badge badge-green">Receita</span>'
+              : p.tipo === 'DESPESA' ? '<span class="badge badge-red">Despesa</span>'
+                : '<span class="badge badge-gray">Neutro</span>'
+            }</td>
+        <td>${p.ativa ? '<span class="badge badge-blue">Ativa</span>' : '<span class="badge badge-gray">Inativa</span>'}</td>
+        <td style="font-size:12px;color:var(--text-muted)">${p.ordem}</td>
+        <td>
+          <div style="display:flex;gap:6px">
+            <button class="btn btn-secondary btn-sm btn-icon" onclick="editPlano('${p.id}')">✏️</button>
+            <button class="btn btn-danger btn-sm btn-icon" onclick="deletePlano('${p.id}','${(p.subcategoria || p.categoria).replace(/'/g, "\\'")}')">🗑</button>
+          </div>
+        </td>
+      </tr>`;
+        });
+      });
+
+      html += '</tbody></table></div>';
+      wrap.innerHTML = html;
+    }
+
+    function openNewPlanoModal() {
+      document.getElementById('plano-id').value = '';
+      document.getElementById('modal-plano-title').textContent = 'Nova Conta';
+      ['codigo', 'categoria', 'subcategoria', 'descricao'].forEach(f => {
+        document.getElementById(`plano-${f}`).value = '';
+      });
+      document.getElementById('plano-tipo').value = 'RECEITA';
+      document.getElementById('plano-ordem').value = '0';
+      document.getElementById('plano-ativa').value = 'true';
+      openModal('modal-plano');
+    }
+
+    function editPlano(id) {
+      const p = state.plano.find(x => x.id === id);
+      if (!p) return;
+      document.getElementById('plano-id').value = id;
+      document.getElementById('modal-plano-title').textContent = 'Editar Conta';
+      document.getElementById('plano-codigo').value = p.codigo || '';
+      document.getElementById('plano-tipo').value = p.tipo || 'RECEITA';
+      document.getElementById('plano-categoria').value = p.categoria || '';
+      document.getElementById('plano-subcategoria').value = p.subcategoria || '';
+      document.getElementById('plano-descricao').value = p.descricao || '';
+      document.getElementById('plano-ordem').value = p.ordem ?? 0;
+      document.getElementById('plano-ativa').value = p.ativa ? 'true' : 'false';
+      openModal('modal-plano');
+    }
+
+    async function savePlano() {
+      const id = document.getElementById('plano-id').value;
+      const codigo = document.getElementById('plano-codigo').value.trim();
+      const categoria = document.getElementById('plano-categoria').value.trim();
+      const tipo = document.getElementById('plano-tipo').value;
+      if (!codigo) { toast('Código é obrigatório', 'error'); return; }
+      if (!categoria) { toast('Categoria é obrigatória', 'error'); return; }
+
+      const payload = {
+        codigo,
+        categoria,
+        subcategoria: document.getElementById('plano-subcategoria').value.trim() || null,
+        tipo,
+        descricao: document.getElementById('plano-descricao').value.trim() || null,
+        ordem: parseInt(document.getElementById('plano-ordem').value) || 0,
+        ativa: document.getElementById('plano-ativa').value === 'true',
+      };
+
+      let error;
+      if (id) {
+        ({ error } = await sb.from('plano_contas').update(payload).eq('id', id));
+      } else {
+        ({ error } = await sb.from('plano_contas').insert(payload));
+      }
+
+      if (error) { toast(`Erro: ${error.message}`, 'error'); return; }
+      toast(id ? 'Conta atualizada!' : 'Conta criada!', 'success');
+      closeModal('modal-plano');
+      renderPlanoPage();
+    }
+
+    async function deletePlano(id, nome) {
+      confirmDelete(`Excluir a conta "${nome}" do plano de contas?`, async () => {
+        const { error } = await sb.from('plano_contas').delete().eq('id', id);
+        if (error) { toast(`Erro: ${error.message}`, 'error'); return; }
+        toast('Conta excluída', 'success');
+        renderPlanoPage();
+      });
+    }
+
+    // ─── UTILITÁRIOS ─────────────────────────────────────────────────────────────
+    function fmtMoney(val) {
+      if (val == null) return '—';
+      return new Intl.NumberFormat('pt-BR', { style: 'currency', currency: 'BRL' }).format(val);
+    }
+    function fmtDate(val) {
+      if (!val) return '—';
+      const d = new Date(val + 'T12:00:00');
+      return d.toLocaleDateString('pt-BR');
+    }
+
+    // ─── BOTÕES DO HEADER (dinâmicos por página) ──────────────────────────────────
+    const headerCTAs = {
+      'cooperativas': `<button class="btn btn-primary" onclick="openNewCoopModal()">➕ Nova Cooperativa</button>`,
+      'plano-contas': `<button class="btn btn-primary" onclick="openNewPlanoModal()">➕ Nova Conta</button>`,
+    };
+    const headerObserver = new MutationObserver(() => {
+      const page = state.currentPage;
+      document.getElementById('header-cta').innerHTML = headerCTAs[page] || '';
+    });
+
+    // ─── INIT ─────────────────────────────────────────────────────────────────────
+    async function init() {
+      await renderDashboard();
+    }
+
+    // Substituir navigate para atualizar CTA do header
+    const _navigate = navigate;
+    window.navigate = function (page) {
+      _navigate(page);
+      document.getElementById('header-cta').innerHTML = headerCTAs[page] || '';
+    };
+
+    // Inicializar CTA do header para página inicial
+    document.getElementById('header-cta').innerHTML = '';
+
+    init();
+  </script>
+</body>
+
+</html>
